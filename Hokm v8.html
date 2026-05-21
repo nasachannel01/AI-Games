@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Hokm - Created by Nizar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #ffd670;
+            --primary-gold-hover: #ffeaad;
+            --bg-dark: #070e0b;
+            --board-green: radial-gradient(circle, #1a4d35 0%, #0b2217 100%);
+            --card-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+            --card-border-radius: 8px;
+            
+            /* Responsive auto-scaling based on both viewport width AND height */
+            --card-width: min(72px, 11vw, 12vh);
+            --card-height: calc(var(--card-width) * 1.54);
+            --card-overlap: calc(var(--card-width) * -0.38);
+            --table-size: min(280px, 36vh, 62vw);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            min-height: -webkit-fill-available;
+            background: var(--bg-dark);
+            color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Screens Manager */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100dvh;
+            box-sizing: border-box;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0; left: 0;
+            padding: 12px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Main Menu Styling */
+        #menu-screen {
+            background: radial-gradient(circle, #1c3529 0%, #060b08 100%);
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .deco-card {
+            position: absolute;
+            width: 70px;
+            height: 105px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatDeco 12s infinite ease-in-out;
+            z-index: 1;
+        }
+        .deco-1 { top: 15%; left: 10%; transform: rotate(-15deg); animation-delay: 0s; }
+        .deco-2 { bottom: 15%; right: 10%; transform: rotate(20deg); animation-delay: 3s; }
+        
+        @keyframes floatDeco {
+            0%, 100% { transform: translateY(0) rotate(-15deg); }
+            50% { transform: translateY(-15px) rotate(-10deg); }
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            z-index: 2;
+        }
+
+        h1.game-title {
+            font-family: 'Cinzel', serif;
+            font-size: min(75px, 15vw);
+            font-weight: 800;
+            color: var(--primary-gold);
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 214, 112, 0.35), 0 8px 16px rgba(0,0,0,0.6);
+            letter-spacing: 6px;
+        }
+
+        .subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: min(18px, 4.5vw);
+            color: #fff;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            margin-top: 5px;
+        }
+
+        .creator-tag {
+            font-family: 'Cinzel', serif;
+            font-size: min(12px, 3.5vw);
+            color: var(--primary-gold);
+            letter-spacing: 2px;
+            margin-top: 12px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #1c2721 0%, #0d1210 100%);
+            border: 2px solid var(--primary-gold);
+            color: var(--primary-gold);
+            padding: 12px 36px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 8px;
+            min-width: 230px;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            z-index: 2;
+        }
+
+        .menu-btn:hover {
+            background: var(--primary-gold);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px rgba(255, 214, 112, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Name Input Dialog Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-card {
+            background: radial-gradient(circle at top, #162a20 0%, #0a130f 100%);
+            border: 2px solid var(--primary-gold);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 360px;
+            width: 85%;
+            text-align: center;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+        }
+
+        .modal-card h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--primary-gold);
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .modal-input {
+            width: 85%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,214,112,0.3);
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 15px;
+            margin: 12px 0;
+            text-align: center;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary-gold);
+        }
+
+        /* Lobby Screen */
+        #lobby-screen {
+            background: radial-gradient(circle, #1a2f25 0%, #070d0a 100%);
+        }
+
+        .lobby-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 214, 112, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 380px;
+            width: 85%;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-left-color: var(--primary-gold);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .lobby-status {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .lobby-players {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .lobby-player-slot {
+            background: rgba(255, 255, 255, 0.04);
+            width: 90%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 13px;
+        }
+
+        /* Game Board Screen */
+        #game-screen {
+            background: var(--board-green);
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 10px 10px env(safe-area-inset-bottom) 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glassmorphic Top HUD */
+        #header-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 214, 112, 0.2);
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            flex-shrink: 0;
+        }
+
+        .hud-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            color: var(--primary-gold);
+            letter-spacing: 1px;
+            margin: 0;
+            font-size: min(18px, 4.5vw);
+        }
+
+        .hud-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+
+        .hud-stat-box {
+            text-align: right;
+        }
+
+        .hud-stat-label {
+            opacity: 0.6;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1px;
+        }
+
+        .hud-stat-value {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Play Field Area */
+        #play-field {
+            flex: 1 1 auto;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        /* Badges Positioning */
+        .player-badge {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            position: absolute;
+            z-index: 5;
+            transition: all 0.25s ease;
+        }
+
+        .player-badge.active-turn {
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 15px rgba(255, 214, 112, 0.4);
+            transform: scale(1.04);
+        }
+
+        .badge-hakem {
+            background: var(--primary-gold);
+            color: var(--bg-dark);
+            font-size: 8px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        #badge-top { top: 8px; left: 50%; transform: translateX(-50%); }
+        #badge-left { left: 8px; top: 50%; transform: translateY(-50%); }
+        #badge-right { right: 8px; top: 50%; transform: translateY(-50%); }
+        #badge-bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
+
+        /* Table Center (Felt & Wood Rim) */
+        #table-center {
+            width: var(--table-size);
+            height: var(--table-size);
+            background: radial-gradient(circle, #1a4d35 0%, #0b2217 100%);
+            border-radius: 50%;
+            border: 6px solid #2d1a0f; 
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.7), 0 8px 20px rgba(0,0,0,0.5);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .table-watermark {
+            position: absolute;
+            font-family: 'Cinzel', serif;
+            font-size: 9px;
+            color: rgba(255, 214, 112, 0.15);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            pointer-events: none;
+            width: 80%;
+            line-height: 1.4;
+            z-index: 1;
+        }
+
+        #played-cards-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+        }
+
+        /* Tactile 3D Cards */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: linear-gradient(135deg, #ffffff 0%, #f7f6f0 100%);
+            color: #1a1a1a;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--card-shadow), inset 0 0 4px rgba(255,255,255,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: calc(var(--card-width) * 0.08); /* Proportional scaling padding */
+            box-sizing: border-box;
+            position: relative;
+            cursor: pointer;
+            margin-left: var(--card-overlap);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, filter 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .card:hover {
+            transform: translateY(-16px) rotate(1deg) scale(1.04);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+            border-color: var(--primary-gold);
+            z-index: 50;
+        }
+
+        .card.disabled {
+            filter: grayscale(80%) brightness(50%);
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Responsive Text Scaling inside cards to prevent wrapping/spilling */
+        .card-corner {
+            text-align: center;
+            font-size: min(11px, 2.5vw, 3vh);
+            font-weight: 800;
+            line-height: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .card-center-suit {
+            font-size: min(28px, 6vw, 7vh);
+            align-self: center;
+            line-height: 1;
+        }
+
+        /* Played Card Slots - Center relative with perfectly balanced offsets and smooth slide throws */
+        .played-card-slot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 10;
+            pointer-events: none; /* Prevent hovers/clicks on cards on the table */
+        }
+
+        /* Reset overlap margins and cursor behavior on table-played cards */
+        .played-card-slot .card {
+            margin: 0 !important;
+            cursor: default !important;
+        }
+
+        /* Symmetrical Throw Animations with Corrected Right Offsets */
+        @keyframes slideFromTop {
+            from { transform: translate(-50%, -240%) rotate(180deg) scale(0.6); opacity: 0; }
+            to { transform: translate(-50%, -115%) rotate(180deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFromBottom {
+            from { transform: translate(-50%, 240%) rotate(0deg) scale(0.6); opacity: 0; }
+            to { transform: translate(-50%, 15%) rotate(0deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFromLeft {
+            from { transform: translate(-240%, -50%) rotate(90deg) scale(0.6); opacity: 0; }
+            to { transform: translate(-135%, -50%) rotate(90deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFromRight {
+            from { transform: translate(240%, -50%) rotate(-90deg) scale(0.6); opacity: 0; }
+            to { transform: translate(35%, -50%) rotate(-90deg) scale(1); opacity: 1; }
+        }
+
+        #slot-top { animation: slideFromTop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        #slot-bottom { animation: slideFromBottom 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        #slot-left { animation: slideFromLeft 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        #slot-right { animation: slideFromRight 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+
+        .red-suit { color: #d9383a; }
+        .black-suit { color: #1a1a1a; }
+
+        /* Hands Layout (Pushed up slightly from safe-area) */
+        #player-hand-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            z-index: 10;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        #player-hand {
+            display: flex;
+            justify-content: center;
+            max-width: 100%;
+            padding-left: calc(var(--card-overlap) * -1); 
+            padding-bottom: 6px;
+        }
+
+        #status-bar {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 214, 112, 0.08);
+            border: 1px solid rgba(255, 214, 112, 0.2);
+            padding: 6px 20px;
+            border-radius: 20px;
+            min-height: 18px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Centered Trump Selector popup */
+        #trump-overlay {
+            position: absolute;
+            top: 42%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            width: 88%;
+            max-width: 360px;
+            background: radial-gradient(circle, #10241b 0%, #060e0a 100%);
+            border: 2px solid var(--primary-gold);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        #trump-overlay h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--primary-gold);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-align: center;
+            font-size: min(22px, 5.5vw);
+            line-height: 1.4;
+        }
+
+        .suit-selection-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .suit-select-btn {
+            background: #ffffff;
+            border: 3px solid transparent;
+            width: min(65px, 15vw);
+            height: min(90px, 21vw);
+            border-radius: var(--card-border-radius);
+            font-size: min(32px, 8vw);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .suit-select-btn:hover {
+            transform: scale(1.08) translateY(-3px);
+            border-color: var(--primary-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: MAIN MENU -->
+    <div id="menu-screen" class="screen active">
+        <div class="deco-card deco-1"></div>
+        <div class="deco-card deco-2"></div>
+        
+        <div class="logo-container">
+            <h1 class="game-title">HOKM</h1>
+            <div class="subtitle">حکم (Best of 3)</div>
+            <div class="creator-tag">Created by Nizar</div>
+        </div>
+        <button class="menu-btn" onclick="openNameModal(false)">Single Player (vs. AI)</button>
+        <button class="menu-btn" onclick="openNameModal(true)">Online Multiplayer</button>
+        
+        <div class="footer-copyright">
+            &copy; 2026 Nizar. All Rights Reserved.
+        </div>
+    </div>
+
+    <!-- CUSTOM NAME PICKER DIALOG -->
+    <div id="name-modal-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <h3>Enter Your Name</h3>
+            <input type="text" id="name-input" class="modal-input" maxlength="12" placeholder="Koorosh">
+            <div>
+                <button class="menu-btn" style="min-width: 140px; padding: 10px 24px;" onclick="submitPlayerName()">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: MULTIPLAYER LOBBY SIMULATOR -->
+    <div id="lobby-screen" class="screen">
+        <div class="lobby-box">
+            <div class="spinner"></div>
+            <div class="lobby-status" id="lobby-status">Searching for opponents...</div>
+            <div class="lobby-players" id="lobby-players">
+                <div class="lobby-player-slot">👨‍💻 <span id="lobby-user-name">Player</span> - <span style="color:var(--primary-gold)">Connected</span></div>
+                <div class="lobby-player-slot" id="p1-slot">⏳ Waiting for Opponent 1...</div>
+                <div class="lobby-player-slot" id="p2-slot">⏳ Waiting for Partner...</div>
+                <div class="lobby-player-slot" id="p3-slot">⏳ Waiting for Opponent 2...</div>
+            </div>
+        </div>
+        
+        <div class="footer-copyright">
+            &copy; 2026 Nizar. All Rights Reserved.
+        </div>
+    </div>
+
+    <!-- SCREEN 3: GAME BOARD -->
+    <div id="game-screen" class="screen">
+        <div id="game-container">
+            
+            <!-- HUD Panel -->
+            <div id="header-hud">
+                <h2 class="hud-title">HOKM</h2>
+                <div class="hud-stats">
+                    <div class="hud-stat-box">
+                        <div class="hud-stat-label">Hokm (Trump)</div>
+                        <div class="hud-stat-value" id="current-trump">None</div>
+                    </div>
+                    <div class="hud-stat-box">
+                        <div class="hud-stat-label">Your Team</div>
+                        <div class="hud-stat-value"><span id="score-us">0</span> / <span id="match-us" style="color: var(--primary-gold);">0</span></div>
+                    </div>
+                    <div class="hud-stat-box">
+                        <div class="hud-stat-label">Opponents</div>
+                        <div class="hud-stat-value"><span id="score-them">0</span> / <span id="match-them" style="color: var(--primary-gold);">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Play Field -->
+            <div id="play-field">
+                <!-- Badges -->
+                <div id="badge-top" class="player-badge">
+                    <span id="label-top">Partner</span>
+                    <span style="font-size:9px; opacity:0.8;"><span id="cards-top">5</span> Cards</span>
+                </div>
+                
+                <div id="badge-left" class="player-badge">
+                    <span id="label-left">Opponent 1</span>
+                    <span style="font-size:9px; opacity:0.8;"><span id="cards-left">5</span> Cards</span>
+                </div>
+
+                <!-- Table Center with Played Cards -->
+                <div id="table-center">
+                    <div class="table-watermark">All rights reserved by Nizar Lalji ;)</div>
+                    <div id="played-cards-layer"></div>
+                </div>
+
+                <div id="badge-right" class="player-badge">
+                    <span id="label-right">Opponent 2</span>
+                    <span style="font-size:9px; opacity:0.8;"><span id="cards-right">5</span> Cards</span>
+                </div>
+                
+                <div id="badge-bottom" class="player-badge">
+                    <span id="label-bottom">You</span>
+                </div>
+            </div>
+
+            <!-- Player Status and Cards -->
+            <div id="player-hand-container">
+                <div id="status-bar">Waiting...</div>
+                <div id="player-hand">
+                    <!-- Cards generated dynamically -->
+                </div>
+            </div>
+
+            <!-- Modal overlay for Trump Selection -->
+            <div id="trump-overlay" style="display:none;">
+                <h2>You are the Hakem.<br>Select the Hokm (Trump Suit)</h2>
+                <div class="suit-selection-group">
+                    <button class="suit-select-btn red-suit" onclick="selectTrump('♥')">♥</button>
+                    <button class="suit-select-btn red-suit" onclick="selectTrump('♦')">♦</button>
+                    <button class="suit-select-btn black-suit" onclick="selectTrump('♠')">♠</button>
+                    <button class="suit-select-btn black-suit" onclick="selectTrump('♣')">♣</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = [
+            { name: '2', val: 2 }, { name: '3', val: 3 }, { name: '4', val: 4 },
+            { name: '5', val: 5 }, { name: '6', val: 6 }, { name: '7', val: 7 },
+            { name: '8', val: 8 }, { name: '9', val: 9 }, { name: '10', val: 10 },
+            { name: 'J', val: 11 }, { name: 'Q', val: 12 }, { name: 'K', val: 13 },
+            { name: 'A', val: 14 }
+        ];
+
+        let deck = [];
+        let hands = [[], [], [], []]; // 0: Player, 1: Opponent Left, 2: Partner, 3: Opponent Right
+        let trumpSuit = null;
+        
+        let scores = [0, 0];       // Tricks score in current Game [Us, Them]
+        let matchScores = [0, 0];  // Game score in Best of 3 Match [Us, Them] (First to 2 wins)
+
+        let currentTrick = []; // Array of { playerIdx: X, card: Y }
+        let currentPlayer = 0; // The active player idx
+        let leadingSuit = null;
+        let isMultiplayerMode = false;
+        let pName = "You";
+
+        const playerNames = {
+            0: "You",
+            1: "Arash",
+            2: "Nima",
+            3: "Yasaman"
+        };
+
+        function changeScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- NAME MODAL SYSTEM ---
+        let pendingMultiplayer = false;
+        
+        function openNameModal(isMultiplayer) {
+            pendingMultiplayer = isMultiplayer;
+            document.getElementById('name-modal-overlay').style.display = 'flex';
+            document.getElementById('name-input').focus();
+        }
+
+        function submitPlayerName() {
+            const val = document.getElementById('name-input').value.trim();
+            pName = val || "Koorosh";
+            playerNames[0] = pName;
+            document.getElementById('name-modal-overlay').style.display = 'none';
+
+            if (pendingMultiplayer) {
+                startMultiplayerLobby();
+            } else {
+                startSinglePlayer();
+            }
+        }
+
+        document.getElementById('name-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitPlayerName();
+            }
+        });
+
+        // --- MULTIPLAYER LOBBY SIMULATOR ---
+        function startMultiplayerLobby() {
+            isMultiplayerMode = true;
+            document.getElementById('lobby-user-name').innerText = pName;
+            changeScreen('lobby-screen');
+            
+            const states = [
+                { id: 'p1-slot', text: '👤 Arash (Opponent 1) - Connected' },
+                { id: 'p2-slot', text: '👤 Nima (Partner) - Connected' },
+                { id: 'p3-slot', text: '👤 Yasaman (Opponent 2) - Connected' }
+            ];
+
+            states.forEach((state, i) => {
+                setTimeout(() => {
+                    const slot = document.getElementById(state.id);
+                    slot.innerText = state.text;
+                    slot.style.color = "var(--primary-gold)";
+                }, (i + 1) * 1200);
+            });
+
+            setTimeout(() => {
+                document.getElementById('lobby-status').innerText = "Match Found! Starting Game...";
+                setTimeout(initMatch, 1000);
+            }, 4500);
+        }
+
+        function startSinglePlayer() {
+            isMultiplayerMode = false;
+            playerNames[1] = "Opponent 1";
+            playerNames[2] = "Partner";
+            playerNames[3] = "Opponent 2";
+            initMatch();
+        }
+
+        // Initialize a completely new match (Best of 3)
+        function initMatch() {
+            changeScreen('game-screen');
+            
+            document.getElementById('label-left').innerText = playerNames[1];
+            document.getElementById('label-top').innerText = playerNames[2];
+            document.getElementById('label-right').innerText = playerNames[3];
+            document.getElementById('label-bottom').innerText = playerNames[0];
+
+            matchScores = [0, 0];
+            document.getElementById('match-us').innerText = "0";
+            document.getElementById('match-them').innerText = "0";
+
+            startNewHand();
+        }
+
+        // Start a new game hand
+        function startNewHand() {
+            scores = [0, 0];
+            document.getElementById('score-us').innerText = "0";
+            document.getElementById('score-them').innerText = "0";
+
+            buildDeck();
+            shuffle();
+            dealFirstFive(); 
+
+            document.getElementById('trump-overlay').style.display = 'flex';
+            document.getElementById('status-bar').innerText = `${pName} is the Hakem. Choose Hokm based on your 5 cards.`;
+            
+            updateHandCounts();
+            renderPlayerHand(false); 
+        }
+
+        function buildDeck() {
+            deck = [];
+            for (let suit of suits) {
+                for (let val of values) {
+                    deck.push({ suit: suit, name: val.name, val: val.val });
+                }
+            }
+        }
+
+        function shuffle() {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function dealFirstFive() {
+            hands = [[], [], [], []];
+            let deckIdx = 0;
+            for (let i = 0; i < 20; i++) {
+                hands[i % 4].push(deck[deckIdx++]);
+            }
+            sortHand(0);
+        }
+
+        function dealRemaining() {
+            let deckIdx = 20;
+            while (deckIdx < 52) {
+                hands[(deckIdx - 20) % 4].push(deck[deckIdx++]);
+            }
+            sortHand(0);
+        }
+
+        function sortHand(playerIdx) {
+            hands[playerIdx].sort((a, b) => {
+                if (trumpSuit) {
+                    if (a.suit === trumpSuit && b.suit !== trumpSuit) return -1;
+                    if (b.suit === trumpSuit && a.suit !== trumpSuit) return 1;
+                }
+                
+                if (a.suit !== b.suit) return suits.indexOf(a.suit) - suits.indexOf(b.suit);
+                return a.val - b.val;
+            });
+        }
+
+        function selectTrump(suit) {
+            trumpSuit = suit;
+            
+            const trumpValSpan = document.getElementById('current-trump');
+            trumpValSpan.innerText = suit;
+            trumpValSpan.className = (suit === '♥' || suit === '♦') ? 'hud-stat-value red-suit' : 'hud-stat-value black-suit';
+            
+            document.getElementById('trump-overlay').style.display = 'none';
+            currentPlayer = 0; 
+            
+            dealRemaining();
+            addHakemBadge(0);
+            nextTurn();
+        }
+
+        function addHakemBadge(playerIdx) {
+            document.querySelectorAll('.badge-hakem').forEach(el => el.remove());
+            
+            const badgeMap = {
+                0: 'badge-bottom',
+                1: 'badge-left',
+                2: 'badge-top',
+                3: 'badge-right'
+            };
+
+            const containerId = badgeMap[playerIdx];
+            const target = document.getElementById(containerId);
+            if (target) {
+                const span = document.createElement('span');
+                span.className = 'badge-hakem';
+                span.innerText = 'Hakem';
+                target.appendChild(span);
+            }
+        }
+
+        function updateHandCounts() {
+            document.getElementById('cards-left').innerText = hands[1].length;
+            document.getElementById('cards-top').innerText = hands[2].length;
+            document.getElementById('cards-right').innerText = hands[3].length;
+        }
+
+        function renderPlayerHand(interactive) {
+            const handDiv = document.getElementById('player-hand');
+            handDiv.innerHTML = '';
+            
+            hands[0].forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                cardEl.className = `card ${isRed ? 'red-suit' : 'black-suit'}`;
+                
+                cardEl.innerHTML = `
+                    <div class="card-corner">${card.name}<br>${card.suit}</div>
+                    <div class="card-center-suit">${card.suit}</div>
+                    <div class="card-corner" style="align-self: flex-end; transform: rotate(180deg);">${card.name}<br>${card.suit}</div>
+                `;
+                
+                const isPlayable = interactive && isValidMove(0, card);
+                if (!isPlayable && interactive) {
+                    cardEl.classList.add('disabled');
+                } else if (interactive) {
+                    cardEl.onclick = () => playCard(0, index);
+                }
+                handDiv.appendChild(cardEl);
+            });
+        }
+
+        function isValidMove(playerIdx, card) {
+            if (!leadingSuit) return true;
+            const hasLeadingSuit = hands[playerIdx].some(c => c.suit === leadingSuit);
+            if (hasLeadingSuit) {
+                return card.suit === leadingSuit;
+            }
+            return true;
+        }
+
+        function renderTable() {
+            const cardLayer = document.getElementById('played-cards-layer');
+            cardLayer.innerHTML = '';
+            
+            currentTrick.forEach(item => {
+                const card = item.card;
+                const cardEl = document.createElement('div');
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                cardEl.className = `card ${isRed ? 'red-suit' : 'black-suit'}`;
+                
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'played-card-slot';
+                
+                if (item.playerIdx === 0) slotDiv.id = 'slot-bottom';
+                if (item.playerIdx === 1) slotDiv.id = 'slot-left';
+                if (item.playerIdx === 2) slotDiv.id = 'slot-top';
+                if (item.playerIdx === 3) slotDiv.id = 'slot-right';
+
+                cardEl.innerHTML = `
+                    <div class="card-corner">${card.name}<br>${card.suit}</div>
+                    <div class="card-center-suit">${card.suit}</div>
+                    <div class="card-corner" style="align-self: flex-end; transform: rotate(180deg);">${card.name}<br>${card.suit}</div>
+                `;
+                
+                slotDiv.appendChild(cardEl);
+                cardLayer.appendChild(slotDiv);
+            });
+        }
+
+        function highlightTurnBadge() {
+            document.querySelectorAll('.player-badge').forEach(b => b.classList.remove('active-turn'));
+            
+            const badgeMap = {
+                0: 'badge-bottom',
+                1: 'badge-left',
+                2: 'badge-top',
+                3: 'badge-right'
+            };
+
+            const targetId = badgeMap[currentPlayer];
+            const badge = document.getElementById(targetId);
+            if (badge) badge.classList.add('active-turn');
+        }
+
+        function playCard(playerIdx, cardIdx) {
+            const card = hands[playerIdx].splice(cardIdx, 1)[0];
+            
+            if (currentTrick.length === 0) {
+                leadingSuit = card.suit;
+            }
+
+            currentTrick.push({ playerIdx, card });
+            renderTable();
+            updateHandCounts();
+
+            if (playerIdx === 0) {
+                renderPlayerHand(false);
+            }
+
+            currentPlayer = (playerIdx + 1) % 4;
+            setTimeout(nextTurn, 800);
+        }
+
+        function nextTurn() {
+            if (currentTrick.length === 4) {
+                evaluateTrick();
+                return;
+            }
+
+            highlightTurnBadge();
+
+            if (currentPlayer === 0) {
+                document.getElementById('status-bar').innerText = "Your Turn. Choose a card to play.";
+                renderPlayerHand(true);
+            } else {
+                document.getElementById('status-bar').innerText = `${playerNames[currentPlayer]} is deciding...`;
+                setTimeout(playAI, 1000);
+            }
+        }
+
+        function playAI() {
+            const hand = hands[currentPlayer];
+            let playableCards = hand.filter(card => isValidMove(currentPlayer, card));
+
+            let chosenCard = playableCards[0];
+            
+            if (leadingSuit) {
+                const leadCards = playableCards.filter(c => c.suit === leadingSuit);
+                if (leadCards.length > 0) {
+                    leadCards.sort((a,b) => b.val - a.val);
+                    chosenCard = leadCards[0]; 
+                }
+            } else {
+                playableCards.sort((a,b) => b.val - a.val);
+                chosenCard = playableCards[0];
+            }
+
+            let chosenIdx = hand.indexOf(chosenCard);
+            playCard(currentPlayer, chosenIdx);
+        }
+
+        function evaluateTrick() {
+            let winningPlay = currentTrick[0];
+
+            for (let i = 1; i < currentTrick.length; i++) {
+                const current = currentTrick[i];
+                const best = winningPlay;
+
+                if (current.card.suit === trumpSuit && best.card.suit !== trumpSuit) {
+                    winningPlay = current;
+                } else if (current.card.suit === trumpSuit && best.card.suit === trumpSuit) {
+                    if (current.card.val > best.card.val) winningPlay = current;
+                } else if (current.card.suit === leadingSuit && best.card.suit !== trumpSuit) {
+                    if (best.card.suit !== leadingSuit || current.card.val > best.card.val) {
+                        winningPlay = current;
+                    }
+                }
+            }
+
+            const winner = winningPlay.playerIdx;
+            document.getElementById('status-bar').innerText = `${playerNames[winner]} wins this trick!`;
+
+            const winnerMap = { 0: 'slot-bottom', 1: 'slot-left', 2: 'slot-top', 3: 'slot-right' };
+            const winningSlot = document.getElementById(winnerMap[winner]);
+            if (winningSlot) {
+                const winningCard = winningSlot.querySelector('.card');
+                if (winningCard) {
+                    winningCard.style.transform = "scale(1.12)";
+                    winningCard.style.boxShadow = "0 0 20px rgba(255, 214, 112, 0.6)";
+                }
+            }
+
+            const teamIndex = (winner === 0 || winner === 2) ? 0 : 1;
+            scores[teamIndex]++;
+
+            document.getElementById('score-us').innerText = scores[0];
+            document.getElementById('score-them').innerText = scores[1];
+
+            currentPlayer = winner;
+            leadingSuit = null;
+            currentTrick = [];
+
+            setTimeout(() => {
+                renderTable();
+                
+                if (scores[0] === 7) {
+                    matchScores[0]++;
+                    document.getElementById('match-us').innerText = matchScores[0];
+                    checkMatchEnd(`Your Team wins this game!`);
+                } else if (scores[1] === 7) {
+                    matchScores[1]++;
+                    document.getElementById('match-them').innerText = matchScores[1];
+                    checkMatchEnd(`Opponents win this game!`);
+                } else {
+                    nextTurn();
+                }
+            }, 1800);
+        }
+
+        function checkMatchEnd(gameWinMessage) {
+            if (matchScores[0] === 2) {
+                alert(`${gameWinMessage}\n\n🎉 MATCH OVER! You & Nima won the Best of 3 match!`);
+                changeScreen('menu-screen');
+            } else if (matchScores[1] === 2) {
+                alert(`${gameWinMessage}\n\n💔 MATCH OVER! Opponents won the Best of 3 match.`);
+                changeScreen('menu-screen');
+            } else {
+                alert(`${gameWinMessage}\n\nStarting next game in the Best of 3 Match!`);
+                startNewHand();
+            }
+        }
+    </script>
+</body>
+</html>

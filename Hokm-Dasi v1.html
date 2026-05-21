@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Hokm - Dasi(10)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #ffd670;
+            --primary-gold-hover: #ffeaad;
+            --bg-dark: #03080f;
+            --board-blue: radial-gradient(circle, #0e2238 0%, #03080d 100%);
+            --card-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+            --card-border-radius: 8px;
+            
+            /* Responsive auto-scaling based on both viewport width AND height */
+            --card-width: min(72px, 11vw, 12vh);
+            --card-height: calc(var(--card-width) * 1.54);
+            --card-overlap: calc(var(--card-width) * -0.38);
+            --table-size: min(280px, 36vh, 62vw);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            min-height: -webkit-fill-available;
+            background: var(--bg-dark);
+            color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Screens Manager */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100dvh;
+            box-sizing: border-box;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0; left: 0;
+            padding: 12px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Main Menu Styling (Velvet Blue Feel) */
+        #menu-screen {
+            background: radial-gradient(circle, #0e1e30 0%, #03080f 100%);
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .deco-card {
+            position: absolute;
+            width: 70px;
+            height: 105px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatDeco 12s infinite ease-in-out;
+            z-index: 1;
+        }
+        .deco-1 { top: 15%; left: 10%; transform: rotate(-15deg); animation-delay: 0s; }
+        .deco-2 { bottom: 15%; right: 10%; transform: rotate(20deg); animation-delay: 3s; }
+        
+        @keyframes floatDeco {
+            0%, 100% { transform: translateY(0) rotate(-15deg); }
+            50% { transform: translateY(-15px) rotate(-10deg); }
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            z-index: 2;
+        }
+
+        h1.game-title {
+            font-family: 'Cinzel', serif;
+            font-size: min(70px, 13vw);
+            font-weight: 800;
+            color: var(--primary-gold);
+            margin: 0;
+            text-shadow: 0 0 20px rgba(255, 214, 112, 0.35), 0 8px 16px rgba(0,0,0,0.6);
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: min(18px, 4.5vw);
+            color: #fff;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            margin-top: 5px;
+        }
+
+        .creator-tag {
+            font-family: 'Cinzel', serif;
+            font-size: min(12px, 3.5vw);
+            color: var(--primary-gold);
+            letter-spacing: 2px;
+            margin-top: 12px;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #102136 0%, #070e17 100%);
+            border: 2px solid var(--primary-gold);
+            color: var(--primary-gold);
+            padding: 12px 36px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 8px;
+            min-width: 230px;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            z-index: 2;
+        }
+
+        .menu-btn:hover {
+            background: var(--primary-gold);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px rgba(255, 214, 112, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Upgraded Setup Modal (Name + Match length Selector) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-card {
+            background: radial-gradient(circle at top, #10243d 0%, #050b14 100%);
+            border: 2px solid var(--primary-gold);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 380px;
+            width: 85%;
+            text-align: center;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+        }
+
+        .modal-card h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--primary-gold);
+            margin-top: 0;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .setup-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .setup-label {
+            font-family: 'Cinzel', serif;
+            color: var(--primary-gold);
+            font-size: 12px;
+            margin-bottom: 6px;
+            display: block;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .modal-input {
+            width: 90%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,214,112,0.3);
+            border-radius: 15px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary-gold);
+        }
+
+        .selector-options {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .selector-btn {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,214,112,0.3);
+            border-radius: 12px;
+            color: #fff;
+            padding: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .selector-btn.active {
+            background: var(--primary-gold);
+            color: var(--bg-dark);
+            border-color: var(--primary-gold);
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(255, 214, 112, 0.4);
+        }
+
+        /* Lobby Screen */
+        #lobby-screen {
+            background: radial-gradient(circle, #0e2238 0%, #03080d 100%);
+        }
+
+        .lobby-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 214, 112, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 380px;
+            width: 85%;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-left-color: var(--primary-gold);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .lobby-status {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .lobby-players {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .lobby-player-slot {
+            background: rgba(255, 255, 255, 0.04);
+            width: 90%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 13px;
+        }
+
+        /* Game Board Screen */
+        #game-screen {
+            background: var(--board-blue);
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 10px 10px env(safe-area-inset-bottom) 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Glassmorphic Top HUD */
+        #header-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 214, 112, 0.2);
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            flex-shrink: 0;
+        }
+
+        .hud-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            color: var(--primary-gold);
+            letter-spacing: 1px;
+            margin: 0;
+            font-size: min(18px, 4.5vw);
+        }
+
+        .hud-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+
+        .hud-stat-box {
+            text-align: right;
+        }
+
+        .hud-stat-box span {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hud-stat-label {
+            opacity: 0.6;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1px;
+        }
+
+        .hud-stat-value {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Specialized glows for HUD trump names */
+        .hud-red-suit {
+            color: #ff6b6b !important;
+            text-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+        }
+
+        .hud-black-suit {
+            color: #ffffff !important;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Play Field Area */
+        #play-field {
+            flex: 1 1 auto;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        /* Badges Positioning */
+        .player-badge {
+            background: rgba(0,0,0,0.65);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            position: absolute;
+            z-index: 5;
+            transition: all 0.25s ease;
+        }
+
+        .player-badge.active-turn {
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 15px rgba(255, 214, 112, 0.4);
+            transform: scale(1.04);
+        }
+
+        .badge-hakem {
+            background: var(--primary-gold);
+            color: var(--bg-dark);
+            font-size: 8px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        #badge-top { top: 8px; left: 50%; transform: translateX(-50%); }
+        #badge-left { left: 8px; top: 50%; transform: translateY(-50%); }
+        #badge-right { right: 8px; top: 50%; transform: translateY(-50%); }
+        #badge-bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
+
+        /* Table Center (Felt & Wood Rim) */
+        #table-center {
+            width: var(--table-size);
+            height: var(--table-size);
+            background: radial-gradient(circle, #0e2238 0%, #03080d 100%);
+            border-radius: 50%;
+            border: 6px solid #2d1a0f; 
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.7), 0 8px 20px rgba(0,0,0,0.5);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .table-watermark {
+            position: absolute;
+            font-family: 'Cinzel', serif;
+            font-size: 9px;
+            color: rgba(255, 214, 112, 0.15);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            pointer-events: none;
+            width: 80%;
+            line-height: 1.4;
+            z-index: 1;
+        }
+
+        #played-cards-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+        }
+
+        /* Tactile 3D Cards */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: linear-gradient(135deg, #ffffff 0%, #f7f6f0 100%);
+            color: #1a1a1a;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--card-shadow), inset 0 0 4px rgba(255,255,255,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: calc(var(--card-width) * 0.08); /* Proportional scaling padding */
+            box-sizing: border-box;
+            position: relative;
+            cursor: pointer;
+            margin-left: var(--card-overlap);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s, filter 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .card:hover {
+            transform: translateY(-16px) rotate(1deg) scale(1.04);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+            border-color: var(--primary-gold);
+            z-index: 50;
+        }
+
+        .card.disabled {
+            filter: grayscale(80%) brightness(50%);
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Responsive Text Scaling inside cards to prevent wrapping/spilling */
+        .card-corner {
+            text-align: center;
+            font-size: min(11px, 2.5vw, 3vh);
+            font-weight: 800;
+            line-height: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .card-center-suit {
+            font-size: min(28px, 6vw, 7vh);
+            align-self: center;
+            line-height: 1;
+        }
+
+        /* Played Card Slots - Center relative with perfectly balanced offsets and smooth slide throws */
+        .played-card-slot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 10;
+            pointer-events: none; /* Prevent hovers/clicks on cards on the table */
+        }
+
+        /* Reset overlap margins and cursor behavior on table-played cards */
+        .played-card-slot .card {
+            margin: 0 !important;
+            cursor: default !important;
+        }
+
+        /* Symmetrical Throw Animations with Corrected Right Offsets */
+        @keyframes slideFromTop {
+            from { transform: translate(-50%, -240%) rotate(180deg) scale(0.6); opacity: 0; }
+            to { transform: translate(-50%, -115%) rotate(180deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFromBottom {
+            from { transform: translate(-50%, 240%) rotate(0deg) scale(0.6); opacity: 0; }
+            to { transform: translate(-50%, 15%) rotate(0deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFromLeft {
+            from { transform: translate(-240%, -50%) rotate(90deg) scale(0.6); opacity: 0; }
+            to { transform: translate(-135%, -50%) rotate(90deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFromRight {
+            from { transform: translate(240%, -50%) rotate(-90deg) scale(0.6); opacity: 0; }
+            to { transform: translate(35%, -50%) rotate(-90deg) scale(1); opacity: 1; }
+        }
+
+        #slot-top { animation: slideFromTop 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        #slot-bottom { animation: slideFromBottom 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        #slot-left { animation: slideFromLeft 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        #slot-right { animation: slideFromRight 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+
+        .red-suit { color: #d9383a; }
+        .black-suit { color: #1a1a1a; }
+
+        /* Hands Layout (Pushed up slightly from safe-area) */
+        #player-hand-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            z-index: 10;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        #player-hand {
+            display: flex;
+            justify-content: center;
+            max-width: 100%;
+            padding-left: calc(var(--card-overlap) * -1); 
+            padding-bottom: 6px;
+        }
+
+        #status-bar {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 214, 112, 0.08);
+            border: 1px solid rgba(255, 214, 112, 0.2);
+            padding: 6px 20px;
+            border-radius: 20px;
+            min-height: 18px;
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: MAIN MENU -->
+    <div id="menu-screen" class="screen active">
+        <div class="deco-card deco-1"></div>
+        <div class="deco-card deco-2"></div>
+        
+        <div class="logo-container">
+            <h1 class="game-title">HOKM - DASI(10)</h1>
+            <div class="subtitle">حکم داسی (Point-Based variant)</div>
+            <div class="creator-tag">Created by Nizar</div>
+        </div>
+        <button class="menu-btn" onclick="openNameModal(false)">Single Player (vs. AI)</button>
+        <button class="menu-btn" onclick="openNameModal(true)">Online Multiplayer</button>
+        
+        <div class="footer-copyright">
+            &copy; 2026 Nizar. All Rights Reserved.
+        </div>
+    </div>
+
+    <!-- UPGRADED CUSTOM SETUP DIALOG -->
+    <div id="name-modal-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <h3>Game Setup</h3>
+            
+            <div class="setup-group">
+                <span class="setup-label">Your Name</span>
+                <input type="text" id="name-input" class="modal-input" maxlength="12" placeholder="Koorosh">
+            </div>
+
+            <div class="setup-group">
+                <span class="setup-label">Series Length</span>
+                <div class="selector-options">
+                    <button class="selector-btn active" id="btn-bo3" onclick="setSeriesLength(3, 'btn-bo3')">Best of 3</button>
+                    <button class="selector-btn" id="btn-bo7" onclick="setSeriesLength(7, 'btn-bo7')">Best of 7</button>
+                    <button class="selector-btn" id="btn-bo10" onclick="setSeriesLength(10, 'btn-bo10')">Best of 10</button>
+                </div>
+            </div>
+
+            <div>
+                <button class="menu-btn" style="min-width: 140px; padding: 10px 24px; margin-top: 10px;" onclick="submitPlayerName()">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: MULTIPLAYER LOBBY SIMULATOR -->
+    <div id="lobby-screen" class="screen">
+        <div class="lobby-box">
+            <div class="spinner"></div>
+            <div class="lobby-status" id="lobby-status">Searching for opponents...</div>
+            <div class="lobby-players" id="lobby-players">
+                <div class="lobby-player-slot">👨‍💻 <span id="lobby-user-name">Player</span> - <span style="color:var(--primary-gold)">Connected</span></div>
+                <div class="lobby-player-slot" id="p1-slot">⏳ Waiting for Opponent 1...</div>
+                <div class="lobby-player-slot" id="p2-slot">⏳ Waiting for Partner...</div>
+                <div class="lobby-player-slot" id="p3-slot">⏳ Waiting for Opponent 2...</div>
+            </div>
+        </div>
+        
+        <div class="footer-copyright">
+            &copy; 2026 Nizar. All Rights Reserved.
+        </div>
+    </div>
+
+    <!-- SCREEN 3: GAME BOARD -->
+    <div id="game-screen" class="screen">
+        <div id="game-container">
+            
+            <!-- HUD Panel -->
+            <div id="header-hud">
+                <h2 class="hud-title">HOKM - DASI(10)</h2>
+                <div class="hud-stats">
+                    <div class="hud-stat-box">
+                        <div class="hud-stat-label">Hokm (Trump)</div>
+                        <div class="hud-stat-value" id="current-trump">None</div>
+                    </div>
+                    <div class="hud-stat-box">
+                        <div class="hud-stat-label">Your Team (10s / Tricks)</div>
+                        <div class="hud-stat-value"><span id="tens-us">0</span> / <span id="tricks-us" style="color: #ccc;">0</span> [Games: <span id="match-us" style="color: var(--primary-gold);">0</span>]</div>
+                    </div>
+                    <div class="hud-stat-box">
+                        <div class="hud-stat-label">Opponents (10s / Tricks)</div>
+                        <div class="hud-stat-value"><span id="tens-them">0</span> / <span id="tricks-them" style="color: #ccc;">0</span> [Games: <span id="match-them" style="color: var(--primary-gold);">0</span>]</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Play Field -->
+            <div id="play-field">
+                <!-- Badges -->
+                <div id="badge-top" class="player-badge">
+                    <span id="label-top">Partner</span>
+                    <span style="font-size:9px; opacity:0.8;"><span id="cards-top">13</span> Cards</span>
+                </div>
+                
+                <div id="badge-left" class="player-badge">
+                    <span id="label-left">Opponent 1</span>
+                    <span style="font-size:9px; opacity:0.8;"><span id="cards-left">13</span> Cards</span>
+                </div>
+
+                <!-- Table Center with Played Cards -->
+                <div id="table-center">
+                    <div class="table-watermark">Hokm Dasi(10)<br>All rights reserved by Nizar Lalji ;)</div>
+                    <div id="played-cards-layer"></div>
+                </div>
+
+                <div id="badge-right" class="player-badge">
+                    <span id="label-right">Opponent 2</span>
+                    <span style="font-size:9px; opacity:0.8;"><span id="cards-right">13</span> Cards</span>
+                </div>
+                
+                <div id="badge-bottom" class="player-badge">
+                    <span id="label-bottom">You</span>
+                </div>
+            </div>
+
+            <!-- Player Status and Cards -->
+            <div id="player-hand-container">
+                <div id="status-bar">Waiting...</div>
+                <div id="player-hand">
+                    <!-- Cards generated dynamically -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = [
+            { name: '2', val: 2 }, { name: '3', val: 3 }, { name: '4', val: 4 },
+            { name: '5', val: 5 }, { name: '6', val: 6 }, { name: '7', val: 7 },
+            { name: '8', val: 8 }, { name: '9', val: 9 }, { name: '10', val: 10 },
+            { name: 'J', val: 11 }, { name: 'Q', val: 12 }, { name: 'K', val: 13 },
+            { name: 'A', val: 14 }
+        ];
+
+        let deck = [];
+        let hands = [[], [], [], []]; // 0: Player, 1: Opponent Left, 2: Partner, 3: Opponent Right
+        let trumpSuit = null;
+        
+        // Point-based Dasi system trackers
+        let tensScores = [0, 0];   // 10s collected this round [Us, Them]
+        let tricksScores = [0, 0]; // Tricks won this round [Us, Them]
+        let matchScores = [0, 0];  // Overall match games [Us, Them]
+
+        // Custom Series settings (Setup upfront)
+        let seriesLength = 3;      // Defaults to Best of 3
+        let targetWins = 2;        // First to 2 wins
+        let nextHandStarter = 0;   // Rotational start tracking: winner of the previous round starts
+
+        let currentTrick = []; // Array of { playerIdx: X, card: Y }
+        let currentPlayer = 0; // The active player idx
+        let leadingSuit = null;
+        let isMultiplayerMode = false;
+        let pName = "You";
+
+        const playerNames = {
+            0: "You",
+            1: "Arash",
+            2: "Nima",
+            3: "Yasaman"
+        };
+
+        function changeScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- UPGRADED NAME & SETUP DIALOG ---
+        let pendingMultiplayer = false;
+        
+        function openNameModal(isMultiplayer) {
+            pendingMultiplayer = isMultiplayer;
+            document.getElementById('name-modal-overlay').style.display = 'flex';
+            document.getElementById('name-input').focus();
+        }
+
+        function setSeriesLength(length, btnId) {
+            seriesLength = length;
+            // Best of 3 -> First to 2 wins. Best of 7 -> First to 4 wins. Best of 10 -> First to 6 wins.
+            targetWins = Math.floor(length / 2) + 1;
+
+            document.querySelectorAll('.selector-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(btnId).classList.add('active');
+        }
+
+        function submitPlayerName() {
+            const val = document.getElementById('name-input').value.trim();
+            pName = val || "Koorosh";
+            playerNames[0] = pName;
+            document.getElementById('name-modal-overlay').style.display = 'none';
+
+            if (pendingMultiplayer) {
+                startMultiplayerLobby();
+            } else {
+                startSinglePlayer();
+            }
+        }
+
+        document.getElementById('name-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitPlayerName();
+            }
+        });
+
+        // --- MULTIPLAYER LOBBY SIMULATOR ---
+        function startMultiplayerLobby() {
+            isMultiplayerMode = true;
+            document.getElementById('lobby-user-name').innerText = pName;
+            changeScreen('lobby-screen');
+            
+            const states = [
+                { id: 'p1-slot', text: '👤 Arash (Opponent 1) - Connected' },
+                { id: 'p2-slot', text: '👤 Nima (Partner) - Connected' },
+                { id: 'p3-slot', text: '👤 Yasaman (Opponent 2) - Connected' }
+            ];
+
+            states.forEach((state, i) => {
+                setTimeout(() => {
+                    const slot = document.getElementById(state.id);
+                    slot.innerText = state.text;
+                    slot.style.color = "var(--primary-gold)";
+                }, (i + 1) * 1200);
+            });
+
+            setTimeout(() => {
+                document.getElementById('lobby-status').innerText = "Match Found! Starting Game...";
+                setTimeout(initMatch, 1000);
+            }, 4500);
+        }
+
+        function startSinglePlayer() {
+            isMultiplayerMode = false;
+            playerNames[1] = "Opponent 1";
+            playerNames[2] = "Partner";
+            playerNames[3] = "Opponent 2";
+            initMatch();
+        }
+
+        // Initialize overall Series match
+        function initMatch() {
+            changeScreen('game-screen');
+            
+            document.getElementById('label-left').innerText = playerNames[1];
+            document.getElementById('label-top').innerText = playerNames[2];
+            document.getElementById('label-right').innerText = playerNames[3];
+            document.getElementById('label-bottom').innerText = playerNames[0];
+
+            matchScores = [0, 0];
+            nextHandStarter = 0; // Completely new series resets initial starting turns to Player 0 (user)
+            document.getElementById('match-us').innerText = "0";
+            document.getElementById('match-them').innerText = "0";
+
+            startNewHand();
+        }
+
+        // Helper to convert Suit Symbol to descriptive string
+        function getTrumpDescription(suit) {
+            if (suit === '♥') return 'Red Heart (♥)';
+            if (suit === '♦') return 'Red Diamond (♦)';
+            if (suit === '♠') return 'Black Spade (♠)';
+            if (suit === '♣') return 'Black Club (♣)';
+            return 'None';
+        }
+
+        // Start a completely fresh hand of Dasi (deal all 13 cards immediately)
+        function startNewHand() {
+            tensScores = [0, 0];
+            tricksScores = [0, 0];
+            trumpSuit = null;
+            leadingSuit = null;
+            currentTrick = [];
+            
+            document.getElementById('tens-us').innerText = "0";
+            document.getElementById('tens-them').innerText = "0";
+            document.getElementById('tricks-us').innerText = "0";
+            document.getElementById('tricks-them').innerText = "0";
+            
+            const trumpValSpan = document.getElementById('current-trump');
+            trumpValSpan.innerText = "None";
+            trumpValSpan.className = 'hud-stat-value';
+
+            buildDeck();
+            shuffle();
+            
+            // Standard deal: All 13 cards dealt immediately
+            hands = [[], [], [], []];
+            let deckIdx = 0;
+            while (deckIdx < 52) {
+                hands[deckIdx % 4].push(deck[deckIdx]);
+                deckIdx++;
+            }
+            sortHand(0);
+            
+            // Start round with the winner of the previous round
+            currentPlayer = nextHandStarter;
+            updateHandCounts();
+            
+            const startMsg = currentPlayer === 0 ? "Your Turn! Play any card to lead the first trick." : `${playerNames[currentPlayer]} won the last round and starts the first trick!`;
+            document.getElementById('status-bar').innerText = startMsg;
+            renderPlayerHand(currentPlayer === 0); 
+            highlightTurnBadge();
+
+            if (currentPlayer !== 0) {
+                setTimeout(playAI, 1200);
+            }
+        }
+
+        function buildDeck() {
+            deck = [];
+            for (let suit of suits) {
+                for (let val of values) {
+                    deck.push({ suit: suit, name: val.name, val: val.val });
+                }
+            }
+        }
+
+        function shuffle() {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function sortHand(playerIdx) {
+            hands[playerIdx].sort((a, b) => {
+                if (trumpSuit) {
+                    if (a.suit === trumpSuit && b.suit !== trumpSuit) return -1;
+                    if (b.suit === trumpSuit && a.suit !== trumpSuit) return 1;
+                }
+                
+                if (a.suit !== b.suit) return suits.indexOf(a.suit) - suits.indexOf(b.suit);
+                return a.val - b.val;
+            });
+        }
+
+        // AI analyzes hand to choose its strongest suit as trump when breaking suit
+        function selectAITrump(playerIdx) {
+            const counts = {};
+            const maxVal = {};
+            suits.forEach(s => { counts[s] = 0; maxVal[s] = 0; });
+            
+            hands[playerIdx].forEach(c => {
+                counts[c.suit]++;
+                if (c.val > maxVal[c.suit]) {
+                    maxVal[c.suit] = c.val;
+                }
+            });
+            
+            let bestSuit = suits[0];
+            let maxCount = -1;
+            suits.forEach(s => {
+                if (counts[s] > maxCount) {
+                    maxCount = counts[s];
+                    bestSuit = s;
+                } else if (counts[s] === maxCount) {
+                    if (maxVal[s] > maxVal[bestSuit]) {
+                        bestSuit = s;
+                    }
+                }
+            });
+            return bestSuit;
+        }
+
+        function updateHandCounts() {
+            document.getElementById('cards-left').innerText = hands[1].length;
+            document.getElementById('cards-top').innerText = hands[2].length;
+            document.getElementById('cards-right').innerText = hands[3].length;
+        }
+
+        function renderPlayerHand(interactive) {
+            const handDiv = document.getElementById('player-hand');
+            handDiv.innerHTML = '';
+            
+            hands[0].forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                cardEl.className = `card ${isRed ? 'red-suit' : 'black-suit'}`;
+                
+                cardEl.innerHTML = `
+                    <div class="card-corner">${card.name}<br>${card.suit}</div>
+                    <div class="card-center-suit">${card.suit}</div>
+                    <div class="card-corner" style="align-self: flex-end; transform: rotate(180deg);">${card.name}<br>${card.suit}</div>
+                `;
+                
+                const isPlayable = interactive && isValidMove(0, card);
+                if (!isPlayable && interactive) {
+                    cardEl.classList.add('disabled');
+                } else if (interactive) {
+                    cardEl.onclick = () => playCard(0, index);
+                }
+                handDiv.appendChild(cardEl);
+            });
+        }
+
+        function isValidMove(playerIdx, card) {
+            if (!leadingSuit) return true;
+            const hasLeadingSuit = hands[playerIdx].some(c => c.suit === leadingSuit);
+            if (hasLeadingSuit) {
+                return card.suit === leadingSuit;
+            }
+            return true;
+        }
+
+        function renderTable() {
+            const cardLayer = document.getElementById('played-cards-layer');
+            cardLayer.innerHTML = '';
+            
+            currentTrick.forEach(item => {
+                const card = item.card;
+                const cardEl = document.createElement('div');
+                const isRed = card.suit === '♥' || card.suit === '♦';
+                cardEl.className = `card ${isRed ? 'red-suit' : 'black-suit'}`;
+                
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'played-card-slot';
+                
+                if (item.playerIdx === 0) slotDiv.id = 'slot-bottom';
+                if (item.playerIdx === 1) slotDiv.id = 'slot-left';
+                if (item.playerIdx === 2) slotDiv.id = 'slot-top';
+                if (item.playerIdx === 3) slotDiv.id = 'slot-right';
+
+                cardEl.innerHTML = `
+                    <div class="card-corner">${card.name}<br>${card.suit}</div>
+                    <div class="card-center-suit">${card.suit}</div>
+                    <div class="card-corner" style="align-self: flex-end; transform: rotate(180deg);">${card.name}<br>${card.suit}</div>
+                `;
+                
+                slotDiv.appendChild(cardEl);
+                cardLayer.appendChild(slotDiv);
+            });
+        }
+
+        function highlightTurnBadge() {
+            document.querySelectorAll('.player-badge').forEach(b => b.classList.remove('active-turn'));
+            
+            const badgeMap = {
+                0: 'badge-bottom',
+                1: 'badge-left',
+                2: 'badge-top',
+                3: 'badge-right'
+            };
+
+            const targetId = badgeMap[currentPlayer];
+            const badge = document.getElementById(targetId);
+            if (badge) badge.classList.add('active-turn');
+        }
+
+        function playCard(playerIdx, cardIdx) {
+            const card = hands[playerIdx].splice(cardIdx, 1)[0];
+            
+            let brokeSuit = false;
+            if (currentTrick.length === 0) {
+                leadingSuit = card.suit;
+            } else {
+                if (card.suit !== leadingSuit) {
+                    brokeSuit = true;
+                }
+            }
+
+            currentTrick.push({ playerIdx, card });
+            renderTable();
+            updateHandCounts();
+
+            if (playerIdx === 0) {
+                renderPlayerHand(false);
+            }
+
+            // Automated Hokm Trigger (No Popup Dialogs)
+            if (brokeSuit && trumpSuit === null) {
+                // The suit of the played card automatically becomes Hokm!
+                trumpSuit = card.suit;
+                
+                // Update HUD Trump Suit values with fully descriptive names
+                const trumpValSpan = document.getElementById('current-trump');
+                trumpValSpan.innerText = getTrumpDescription(trumpSuit);
+                trumpValSpan.className = (trumpSuit === '♥' || trumpSuit === '♦') ? 'hud-stat-value hud-red-suit' : 'hud-stat-value hud-black-suit';
+                
+                // Re-sort user hand so newly declared trumps stack cleanly on the left
+                sortHand(0);
+                renderPlayerHand(false);
+
+                // Show status banner notification
+                document.getElementById('status-bar').innerText = `${playerNames[playerIdx]} has no cards of the led suit! Played ${card.suit}. ${getTrumpDescription(trumpSuit)} is now Hokm!`;
+                
+                // Proceed with slightly longer delay so the user can easily read the log
+                currentPlayer = (playerIdx + 1) % 4;
+                setTimeout(nextTurn, 1400);
+            } else {
+                // Settle normal turn transitions
+                currentPlayer = (playerIdx + 1) % 4;
+                setTimeout(nextTurn, 800);
+            }
+        }
+
+        function nextTurn() {
+            if (currentTrick.length === 4) {
+                evaluateTrick();
+                return;
+            }
+
+            highlightTurnBadge();
+
+            if (currentPlayer === 0) {
+                document.getElementById('status-bar').innerText = "Your Turn. Choose a card to play.";
+                renderPlayerHand(true);
+            } else {
+                document.getElementById('status-bar').innerText = `${playerNames[currentPlayer]} is deciding...`;
+                setTimeout(playAI, 1000);
+            }
+        }
+
+        // Helper function: check if card1 beats card2 under current trick rules
+        function cardBeats(c1, c2, lead, trump) {
+            if (trump) {
+                if (c1.suit === trump && c2.suit !== trump) return true;
+                if (c2.suit === trump && c1.suit !== trump) return false;
+                if (c1.suit === trump && c2.suit === trump) return c1.val > c2.val;
+            }
+            if (c1.suit === lead && c2.suit !== lead) return true;
+            if (c2.suit === lead && c1.suit !== lead) return false;
+            if (c1.suit === lead && c2.suit === lead) return c1.val > c2.val;
+            return false;
+        }
+
+        // Helper function: get current best played card on table
+        function getCurrentBestPlay() {
+            if (currentTrick.length === 0) return null;
+            let bestPlay = currentTrick[0];
+            for (let i = 1; i < currentTrick.length; i++) {
+                if (cardBeats(currentTrick[i].card, bestPlay.card, leadingSuit, trumpSuit)) {
+                    bestPlay = currentTrick[i];
+                }
+            }
+            return bestPlay;
+        }
+
+        // Highly competent AI decision module targeting Tens protection and smear-wins
+        function selectAICard(playerIdx) {
+            const hand = hands[playerIdx];
+            const playable = hand.filter(card => isValidMove(playerIdx, card));
+            
+            if (playable.length === 1) {
+                return playable[0];
+            }
+            
+            const bestPlay = getCurrentBestPlay();
+            const isPartner = (idx) => idx === (playerIdx + 2) % 4;
+            
+            // --- SCENARIO A: IF LEADING THE TRICK ---
+            if (currentTrick.length === 0) {
+                // Safeguard our Tens: Avoid leading a 10 unless it is guaranteed to win (i.e. Ace or King of Trump/Lead)
+                const nonTens = playable.filter(c => c.val !== 10);
+                const tens = playable.filter(c => c.val === 10);
+                
+                nonTens.sort((a,b) => b.val - a.val); // Sort high to low
+                
+                if (nonTens.length > 0) {
+                    // Lead highest non-ten to maintain control or probe safely
+                    return nonTens[0];
+                } else {
+                    // Forced to lead a Ten
+                    tens.sort((a,b) => b.val - a.val);
+                    return tens[0];
+                }
+            }
+            
+            // --- SCENARIO B: IF FOLLOWING OR FINISHING ---
+            const partnerIsWinning = isPartner(bestPlay.playerIdx);
+            const tenIsOnTable = currentTrick.some(p => p.card.val === 10);
+            
+            // Check if any of our playable cards can beat the current leading card
+            const winningCards = playable.filter(c => cardBeats(c, bestPlay.card, leadingSuit, trumpSuit));
+            
+            if (partnerIsWinning) {
+                // Partner is currently winning. Protect their win and "smear" (discard) our 10 if we have it and the win is guaranteed.
+                const isLastPlayer = (currentTrick.length === 3);
+                const partnerPlayedUnbeatable = (bestPlay.card.val === 14 || (trumpSuit && bestPlay.card.suit === trumpSuit && bestPlay.card.val >= 13));
+                
+                const winIsGuaranteed = isLastPlayer || partnerPlayedUnbeatable;
+                
+                if (winIsGuaranteed) {
+                    const tens = playable.filter(c => c.val === 10);
+                    if (tens.length > 0) {
+                        return tens[0]; // Throw the 10 to partner to capture!
+                    }
+                }
+                
+                // Otherwise, conserve cards: play lowest playable non-ten
+                const nonTens = playable.filter(c => c.val !== 10);
+                if (nonTens.length > 0) {
+                    nonTens.sort((a,b) => a.val - b.val); // lowest value
+                    return nonTens[0]; 
+                } else {
+                    playable.sort((a,b) => a.val - b.val);
+                    return playable[0];
+                }
+            } else {
+                // Opponent is winning. We must try to defeat them, especially if a 10 is on the table.
+                if (winningCards.length > 0) {
+                    winningCards.sort((a,b) => a.val - b.val); // sort ascending to conserve power
+                    
+                    // Prioritize winning with a non-ten card if possible
+                    const winningNonTens = winningCards.filter(c => c.val !== 10);
+                    if (winningNonTens.length > 0) {
+                        return winningNonTens[0]; // lowest card that still wins
+                    }
+                    return winningCards[0];
+                } else {
+                    // We cannot win. Protect our Tens: play our lowest non-ten card
+                    const nonTens = playable.filter(c => c.val !== 10);
+                    if (nonTens.length > 0) {
+                        nonTens.sort((a,b) => a.val - b.val); // sort descending
+                        return nonTens[0]; // select lowest non-ten
+                    } else {
+                        // Forced to yield a Ten
+                        playable.sort((a,b) => a.val - b.val);
+                        return playable[0];
+                    }
+                }
+            }
+        }
+
+        function playAI() {
+            const hand = hands[currentPlayer];
+            const chosenCard = selectAICard(currentPlayer);
+            const chosenIdx = hand.indexOf(chosenCard);
+            playCard(currentPlayer, chosenIdx);
+        }
+
+        function evaluateTrick() {
+            let winningPlay = currentTrick[0];
+
+            for (let i = 1; i < currentTrick.length; i++) {
+                const current = currentTrick[i];
+                const best = winningPlay;
+
+                if (trumpSuit) {
+                    if (current.card.suit === trumpSuit && best.card.suit !== trumpSuit) {
+                        winningPlay = current;
+                    } else if (current.card.suit === trumpSuit && best.card.suit === trumpSuit) {
+                        if (current.card.val > best.card.val) winningPlay = current;
+                    } else if (current.card.suit === leadingSuit && best.card.suit !== trumpSuit) {
+                        if (best.card.suit !== leadingSuit || current.card.val > best.card.val) {
+                            winningPlay = current;
+                        }
+                    }
+                } else {
+                    // Standard lead suit evaluations
+                    if (current.card.suit === leadingSuit) {
+                        if (best.card.suit !== leadingSuit || current.card.val > best.card.val) {
+                            winningPlay = current;
+                        }
+                    }
+                }
+            }
+
+            const winner = winningPlay.playerIdx;
+            document.getElementById('status-bar').innerText = `${playerNames[winner]} wins this trick!`;
+
+            // Highlight scaling on winner's card
+            const winnerMap = { 0: 'slot-bottom', 1: 'slot-left', 2: 'slot-top', 3: 'slot-right' };
+            const winningSlot = document.getElementById(winnerMap[winner]);
+            if (winningSlot) {
+                const winningCard = winningSlot.querySelector('.card');
+                if (winningCard) {
+                    winningCard.style.transform = "scale(1.12)";
+                    winningCard.style.boxShadow = "0 0 20px rgba(255, 214, 112, 0.6)";
+                }
+            }
+
+            const teamIndex = (winner === 0 || winner === 2) ? 0 : 1;
+            
+            // Dasi Scoring: Check trick contents for Tens
+            let tensInTrick = 0;
+            currentTrick.forEach(play => {
+                if (play.card.val === 10) {
+                    tensInTrick++;
+                }
+            });
+
+            tensScores[teamIndex] += tensInTrick;
+            tricksScores[teamIndex]++;
+
+            // Update board stats
+            document.getElementById('tens-us').innerText = tensScores[0];
+            document.getElementById('tens-them').innerText = tensScores[1];
+            document.getElementById('tricks-us').innerText = tricksScores[0];
+            document.getElementById('tricks-them').innerText = tricksScores[1];
+
+            currentPlayer = winner;
+            leadingSuit = null;
+            currentTrick = [];
+
+            // Record the winner of the current trick to start the next hand if this is the deciding trick of the round
+            nextHandStarter = winner;
+
+            setTimeout(() => {
+                renderTable();
+                
+                // --- INSTANT ROUND END CHECK 1: 3 Tens ---
+                // If either team secures 3 or more Tens, the round ends immediately!
+                if (tensScores[0] >= 3) {
+                    matchScores[0]++;
+                    document.getElementById('match-us').innerText = matchScores[0];
+                    checkMatchEnd("Your Team wins the round! (Captured 3 tens)");
+                    return;
+                } else if (tensScores[1] >= 3) {
+                    matchScores[1]++;
+                    document.getElementById('match-them').innerText = matchScores[1];
+                    checkMatchEnd("Opponents win the round. (Captured 3 tens)");
+                    return;
+                }
+
+                // --- INSTANT ROUND END CHECK 2: 2 Tens & 7 Tricks ---
+                // If a team already holds 2 Tens and achieves 7 Tricks, they win the hand immediately
+                if (tensScores[0] === 2 && tricksScores[0] >= 7) {
+                    matchScores[0]++;
+                    document.getElementById('match-us').innerText = matchScores[0];
+                    checkMatchEnd("Your Team wins the round! (Captured 2 tens and secured 7 tricks)");
+                    return;
+                } else if (tensScores[1] === 2 && tricksScores[1] >= 7) {
+                    matchScores[1]++;
+                    document.getElementById('match-them').innerText = matchScores[1];
+                    checkMatchEnd("Opponents win the round. (Captured 2 tens and secured 7 tricks)");
+                    return;
+                }
+
+                // fallback check if hand is fully played out (which results in a 2-2 tie)
+                if (hands[0].length === 0) {
+                    evaluateRoundEnd();
+                } else {
+                    nextTurn();
+                }
+            }, 1800);
+        }
+
+        // fallback evaluation for a 2-2 Tie
+        function evaluateRoundEnd() {
+            let roundWinner = null;
+
+            if (tensScores[0] > 2) {
+                roundWinner = 0;
+            } else if (tensScores[1] > 2) {
+                roundWinner = 1;
+            } else {
+                // Tie breaker: Highest tricks score wins
+                if (tricksScores[0] > tricksScores[1]) {
+                    roundWinner = 0;
+                } else {
+                    roundWinner = 1;
+                }
+            }
+
+            if (roundWinner === 0) {
+                matchScores[0]++;
+                document.getElementById('match-us').innerText = matchScores[0];
+                checkMatchEnd("Your Team wins this round!");
+            } else {
+                matchScores[1]++;
+                document.getElementById('match-them').innerText = matchScores[1];
+                checkMatchEnd("Opponents win this round.");
+            }
+        }
+
+        function checkMatchEnd(gameWinMessage) {
+            if (matchScores[0] === targetWins) {
+                alert(`${gameWinMessage}\n\n🎉 MATCH OVER! You won the Best of ${seriesLength} match!`);
+                changeScreen('menu-screen');
+            } else if (matchScores[1] === targetWins) {
+                alert(`${gameWinMessage}\n\n💔 MATCH OVER! Opponents won the Best of ${seriesLength} match.`);
+                changeScreen('menu-screen');
+            } else {
+                alert(`${gameWinMessage}\n\nStarting next hand in the Best of ${seriesLength} Match!`);
+                startNewHand();
+            }
+        }
+    </script>
+</body>
+</html>
