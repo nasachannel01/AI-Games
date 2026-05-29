@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Hokm Dasi - Pro v15</title>
+    <title>Hokm Dasi - Pro v16</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Using the most stable CDN for GitHub Pages -->
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
@@ -20,45 +19,38 @@
         .screen { display: none; width: 100%; height: 100dvh; flex-direction: column; align-items: center; justify-content: center; position: absolute; }
         .screen.active { display: flex; }
 
-        /* Setup Overlays */
+        /* Setup UI */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(8px); }
         .modal-card { background: #0e1e30; border: 2px solid var(--gold); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; display: flex; flex-direction: column; gap: 15px; }
         input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--gold); background: #000; color: #fff; font-size: 16px; box-sizing: border-box; }
         .menu-btn { background: #102136; border: 2px solid var(--gold); color: var(--gold); padding: 14px; border-radius: 30px; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: 0.2s; min-height: 50px; }
         .menu-btn:disabled { opacity: 0.5; }
 
-        /* Game Board */
-        #game-container { width: 100%; height: 100%; display: flex; flex-direction: column; background: radial-gradient(circle, #0e2238 0%, #03080d 100%); }
-        #header-hud { display: flex; justify-content: space-between; padding: 10px 12px; background: rgba(0,0,0,0.9); font-size: 10px; border-bottom: 2px solid #222; cursor: pointer; }
-        .hud-score { background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; border: 1px solid #444; }
-        #play-field { flex: 1; position: relative; }
-        #table-center { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); width: 240px; height: 240px; border-radius: 50%; border: 1px solid rgba(255,214,112,0.1); }
-        
-        .player-badge { position: absolute; background: rgba(0,0,0,0.95); padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #444; z-index: 30; white-space: nowrap; transform: translate(-50%, -50%); }
-        .active-turn { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); scale: 1.1; }
-        .dealer-mark { color: var(--gold); font-weight: bold; border: 1px solid var(--gold); border-radius: 50%; padding: 0 4px; margin-left: 4px; font-size: 9px; }
+        /* Lobby UI */
+        #lobby-list { margin: 15px 0; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; width: 280px; min-height: 120px; }
+        .lobby-item { padding: 8px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .lobby-status { font-size: 12px; color: var(--gold); margin-top: 10px; text-align: center; }
 
-        /* Card Visuals - Forced High Vis */
-        .card { 
-            width: var(--card-w); height: var(--card-h); 
-            background: #FFFFFF !important; color: #000000 !important; 
-            border-radius: 8px; border: 1px solid #000;
-            display: flex; flex-direction: column; justify-content: space-between; 
-            padding: 5px; box-sizing: border-box; font-weight: 900; font-size: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
-        }
+        /* Game UI */
+        #game-container { width: 100%; height: 100%; display: flex; flex-direction: column; background: radial-gradient(circle, #0e2238 0%, #03080d 100%); }
+        #header-hud { display: flex; justify-content: space-between; padding: 10px 12px; background: rgba(0,0,0,0.9); font-size: 10px; border-bottom: 2px solid #222; }
+        .hud-score { background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; border: 1px solid #444; text-align: center; }
+        #play-field { flex: 1; position: relative; }
+        #table-center { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; border-radius: 50%; border: 1px solid rgba(255,214,112,0.1); }
+        
+        .player-badge { position: absolute; background: rgba(0,0,0,0.95); padding: 6px 14px; border-radius: 25px; font-size: 12px; border: 1px solid #444; z-index: 30; white-space: nowrap; transform: translate(-50%, -50%); transition: 0.3s; }
+        .active-turn { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); scale: 1.1; }
+
+        /* Card Visuals */
+        .card { width: var(--card-w); height: var(--card-h); background: #FFF !important; color: #000 !important; border-radius: 8px; border: 1px solid #000; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; box-sizing: border-box; font-weight: 900; font-size: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
         .red-suit { color: #d00 !important; }
         .card-center { font-size: 2.4em; align-self: center; line-height: 1; pointer-events: none; }
-        
-        /* Only dim cards if it is strictly NOT your turn */
-        .not-my-turn { filter: grayscale(1) brightness(0.4) !important; opacity: 0.4 !important; pointer-events: none !important; }
+        .not-my-turn { filter: grayscale(1) brightness(0.4); opacity: 0.4 !important; pointer-events: none !important; }
 
         #player-hand { display: flex; justify-content: center; padding: 25px 10px; padding-left: 50px; min-height: var(--card-h); background: rgba(0,0,0,0.85); z-index: 100; border-top: 1px solid #333; }
         #player-hand .card { margin-left: var(--overlap); transition: transform 0.2s; cursor: pointer; }
-        #player-hand .card:hover { transform: translateY(-25px); z-index: 200; }
-
         .played-card-slot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
-        #status-bar { text-align: center; font-size: 16px; padding: 15px; color: var(--gold); background: #000; font-weight: 700; border-top: 2px solid #333; }
+        #status-bar { text-align: center; font-size: 15px; padding: 15px; color: var(--gold); background: #000; font-weight: 700; border-top: 2px solid #333; }
 
         #result-modal { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.85); flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .result-box { text-align: center; background: #102136; padding: 35px; border-radius: 25px; border: 3px solid var(--gold); min-width: 280px; }
@@ -70,7 +62,7 @@
         <h1 style="font-family:'Cinzel'; color:var(--gold); font-size: 45px;">HOKM DASI</h1>
         <div style="width:230px; display:flex; flex-direction:column; gap:12px">
             <button class="menu-btn" onclick="startSinglePlayer()">Single Player</button>
-            <button class="menu-btn" onclick="openModal('host')">Host Match</button>
+            <button class="menu-btn" onclick="openModal('host')">Host Online</button>
             <button class="menu-btn" onclick="openModal('join')">Join Game</button>
         </div>
     </div>
@@ -85,7 +77,7 @@
                     <option value="6" selected>6 Players</option>
                 </select>
             </div>
-            <input type="text" id="j-key" placeholder="Enter 5-Digit Key" style="display:none; text-transform:uppercase;">
+            <input type="text" id="j-key" placeholder="Enter Room Key" style="display:none; text-transform:uppercase;">
             <button id="lobby-submit" class="menu-btn" onclick="submitMulti()">Enter Lobby</button>
             <button class="menu-btn" style="background:transparent; border:none" onclick="closeModal()">Back</button>
         </div>
@@ -95,21 +87,21 @@
         <div class="result-box">
             <div id="result-text" style="font-family:Cinzel; font-size:28px; color:var(--gold)">ROUND OVER</div>
             <div id="result-details" style="margin:20px 0; opacity:0.8">Scoring...</div>
-            <button class="menu-btn" style="width:100%" onclick="closeResultModal()">Start Next Round</button>
+            <button class="menu-btn" style="width:100%" onclick="closeResultModal()">Next Round</button>
         </div>
     </div>
 
     <div id="lobby-screen" class="screen">
         <h2 style="margin:0">Room Key</h2>
         <div id="key-view" style="font-size:45px; color:var(--gold); letter-spacing:12px; margin:15px 0">-----</div>
-        <div id="lobby-list" style="margin:20px 0; background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; width:280px; min-height: 120px;"></div>
+        <div id="lobby-list"></div>
         <button id="start-btn" class="menu-btn" style="display:none; width: 220px" onclick="startGame()">Start Match</button>
-        <p id="wait-txt" style="color:var(--gold); text-align:center; padding:0 20px;">Establishing Secure Network...</p>
+        <p id="wait-txt" class="lobby-status">Initialising Network...</p>
     </div>
 
     <div id="game-screen" class="screen">
         <div id="game-container">
-            <div id="header-hud" onclick="renderHand()">
+            <div id="header-hud">
                 <div>TRUMP: <span id="hud-trump" style="color:var(--gold); font-weight:800;">NONE</span></div>
                 <div class="hud-score">US: <span id="hud-us-tens">0</span>T/<span id="hud-us-tricks">0</span> (G:<span id="hud-us-match">0</span>)</div>
                 <div class="hud-score">THEM: <span id="hud-them-tens">0</span>T/<span id="hud-them-tricks">0</span> (G:<span id="hud-them-match">0</span>)</div>
@@ -137,6 +129,8 @@
         document.getElementById('host-opt').style.display = isHost ? "block" : "none";
         document.getElementById('j-key').style.display = isHost ? "none" : "block";
         document.getElementById('multi-modal').style.display = 'flex';
+        document.getElementById('lobby-submit').disabled = false;
+        document.getElementById('lobby-submit').innerText = "Enter Lobby";
     }
     function closeModal() { document.getElementById('multi-modal').style.display = 'none'; }
 
@@ -148,7 +142,6 @@
         document.getElementById('lobby-submit').disabled = true;
         document.getElementById('lobby-submit').innerText = "Connecting...";
 
-        // GITHUB HTTPS OPTIMIZED CONFIG
         const peerConfig = {
             secure: true,
             port: 443,
@@ -168,28 +161,36 @@
                 players = [{name: nameInput, id: id, conn: null, isAI: false}];
                 updateLobby();
                 document.getElementById('start-btn').style.display = 'block';
-                document.getElementById('wait-txt').innerText = "Wait for players to join";
+                document.getElementById('wait-txt').innerText = "Waiting for players...";
             } else {
                 document.getElementById('key-view').innerText = key;
-                document.getElementById('wait-txt').innerText = "Connecting to Host...";
-                hostConn = peer.connect("DASI-" + key);
+                document.getElementById('wait-txt').innerText = "Connecting to host...";
+                hostConn = peer.connect("DASI-" + key, { reliable: true });
                 setupClient(hostConn, nameInput);
             }
         });
 
         peer.on('error', (err) => {
-            alert("Network Error: " + err.type + ". Ensure no ad-blockers are active.");
+            alert("Connection error: " + err.type);
             document.getElementById('lobby-submit').disabled = false;
             document.getElementById('lobby-submit').innerText = "Enter Lobby";
         });
 
+        // Host listener for incoming connections
         peer.on('connection', c => {
+            c.on('open', () => {
+                // Host sends a ping to acknowledge the connection
+                c.send({ type: 'HANDSHAKE' });
+            });
             c.on('data', d => {
-                if(d.type==='JOIN' && isHost) {
-                    players.push({name: d.name, id: c.peer, conn: c, isAI: false});
-                    updateLobby();
-                    broadcast({type:'LOBBY', players: players.map(p => ({name: p.name}))});
-                } else if(d.type==='PLAY' && isHost) {
+                if(d.type === 'JOIN' && isHost) {
+                    // Check if already in
+                    if (!players.find(p => p.id === c.peer)) {
+                        players.push({name: d.name, id: c.peer, conn: c, isAI: false});
+                        updateLobby();
+                        broadcast({type:'LOBBY', players: players.map(p => ({name: p.name}))});
+                    }
+                } else if(d.type === 'PLAY' && isHost) {
                     handlePlayLogic(parseInt(d.pIdx), d.card);
                 }
             });
@@ -199,10 +200,19 @@
     function setupClient(c, myName) {
         c.on('open', () => {
             document.getElementById('wait-txt').innerText = "Handshaking...";
+            // Explicit join after open
             c.send({type:'JOIN', name: myName});
         });
+        
         c.on('data', d => {
-            if(d.type==='LOBBY') { players = d.players; updateLobby(); }
+            if(d.type === 'HANDSHAKE') {
+                c.send({type:'JOIN', name: myName});
+            }
+            else if(d.type === 'LOBBY') {
+                players = d.players;
+                updateLobby();
+                document.getElementById('wait-txt').innerText = "Connected! Waiting for host...";
+            }
             else if(d.type==='START') { gameMode = d.mode; players = d.players; myIdx = parseInt(d.myIdx); showScreen('game-screen'); initBoard(); }
             else if(d.type==='DEAL') { 
                 document.getElementById('cards-layer').innerHTML = '';
@@ -219,12 +229,17 @@
             else if(d.type==='MSG') { document.getElementById('status-bar').innerText = d.txt; }
             else if(d.type==='ROUND_END') { showResultModal(d.title, d.details); }
         });
+
+        c.on('close', () => {
+            alert("Lost connection to host.");
+            location.reload();
+        });
     }
 
     function broadcast(d) { players.forEach(p => p.conn && p.conn.send(d)); }
 
     function startSinglePlayer() {
-        isHost = true; gameMode = 6; players = [{name: "Host", id: 'host', isAI:false}]; startGame();
+        isHost = true; gameMode = 6; players = [{name: "You", id: 'host', isAI:false}]; startGame();
     }
 
     function startGame() {
@@ -274,7 +289,7 @@
             trump = card.s;
             allHands.forEach(hand => sortHand(hand));
             myHand = allHands[0];
-            broadcast({type:'MSG', txt: `HOKM SET: ${trump}`});
+            broadcast({type:'MSG', txt: `TRUMP SET: ${trump}`});
         }
         
         trick.push({pIdx, card});
@@ -305,7 +320,7 @@
         else if(tens[0] === 2 && tricks[0] >= winThreshold) { end = true; title = "US WINS!"; details = `2 Tens and ${tricks[0]} Tricks.`; match[0]++; }
         else if(tens[1] === 2 && tricks[1] >= winThreshold) { end = true; title = "THEM WINS!"; details = `2 Tens and ${tricks[1]} Tricks.`; match[1]++; }
         else if(tens[0] === 2 && tens[1] === 2 && tricks[0] === drawThreshold && tricks[1] === drawThreshold && allHands[0].length === 0) { 
-            end = true; title = "ROUND DRAW!"; details = "4 Tricks and 2 Tens each."; 
+            end = true; title = "ROUND DRAW!"; details = "Equal Tens and Tricks."; 
         }
 
         if(end) {
@@ -416,7 +431,14 @@
         document.getElementById(id).classList.add('active');
     }
     function updateLobby() {
-        document.getElementById('lobby-list').innerHTML = players.map(p => `<div style="padding:10px; border-bottom:1px solid #333">👤 ${p.name || "..."}</div>`).join('');
+        const list = document.getElementById('lobby-list');
+        list.innerHTML = players.map(p => `
+            <div class="lobby-item">
+                <span style="color:var(--gold)">👤</span>
+                <span>${p.name || "Connecting..."}</span>
+                <span style="margin-left:auto; font-size:10px; opacity:0.6">${p.id === peer.id ? '(You)' : 'Ready'}</span>
+            </div>
+        `).join('');
     }
     function getStats() { return {tens, tricks}; }
     function isRed(s) { return s==='♥'||s==='♦'; }
